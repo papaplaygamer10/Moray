@@ -18,8 +18,8 @@
         }
 
         .container {
-            width: 300px;
-            height: 180px;
+            width: 300px; /* Adjust the width here */
+            height: 180px; /* Adjust the height here */
             position: relative;
             perspective: 1000px;
             border-radius: 10px;
@@ -100,6 +100,7 @@
         const backImage = document.getElementById('back');
 
         let isFlipping = false;
+        let currentAngle = 0;
 
         submitBtn.addEventListener('click', () => {
             const frontFile = frontImageInput.files[0];
@@ -120,42 +121,28 @@
             document.querySelector('.upload-screen').style.display = 'none';
         });
 
-        container.addEventListener('mousemove', (event) => {
-            if (isFlipping) return;
-            const x = event.clientX - container.getBoundingClientRect().left;
-            const rotation = (x / container.offsetWidth) * 180;
-            images.style.transform = `rotateY(${rotation}deg)`;
-        });
-
-        container.addEventListener('touchmove', (event) => {
-            if (isFlipping) return;
-            const touch = event.touches[0];
-            const x = touch.clientX - container.getBoundingClientRect().left;
-            const rotation = (x / container.offsetWidth) * 180;
-            images.style.transform = `rotateY(${rotation}deg)`;
+        container.addEventListener('touchstart', (event) => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            }
         });
 
         container.addEventListener('click', () => {
             if (isFlipping) return;
             isFlipping = true;
-            const currentRotation = getComputedStyle(images).transform;
-            const angle = currentRotation.includes('matrix') ? extractRotation(currentRotation) : 0;
-            const newAngle = angle >= 90 ? 0 : 180;
-            images.style.transition = 'transform 0.5s ease-out';
-            images.style.transform = `rotateY(${newAngle}deg)`;
+
+            currentAngle = currentAngle === 0 ? 180 : 0;
+            images.style.transition = 'transform 0.2s ease-out';
+            images.style.transform = `rotateY(${currentAngle}deg)`;
+
             setTimeout(() => {
                 isFlipping = false;
-                images.style.transition = 'transform 0.3s ease-out';
-            }, 500);
+            }, 200);
         });
 
-        function extractRotation(matrix) {
-            const values = matrix.split('(')[1].split(')')[0].split(',');
-            const a = values[0];
-            const b = values[1];
-            let angle = Math.round(Math.atan2(b, a) * (180 / Math.PI));
-            return angle < 0 ? angle + 360 : angle;
-        }
+        // Instructions for position adjustment:
+        // Modify the "width" and "height" properties of the .container class in the CSS above
+        // to adjust the size of the rotational picture "window."
     </script>
 
 </body>
