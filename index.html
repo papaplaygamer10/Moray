@@ -22,10 +22,8 @@
             height: 180px;
             position: relative;
             perspective: 1000px;
-            background-color: rgba(255, 255, 255, 0.8);
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
 
         .images {
@@ -33,7 +31,7 @@
             height: 100%;
             position: absolute;
             transform-style: preserve-3d;
-            transition: transform 0.5s;
+            transition: transform 0.3s ease-out;
         }
 
         .images img {
@@ -101,6 +99,8 @@
         const frontImage = document.getElementById('front');
         const backImage = document.getElementById('back');
 
+        let isFlipping = false;
+
         submitBtn.addEventListener('click', () => {
             const frontFile = frontImageInput.files[0];
             const backFile = backImageInput.files[0];
@@ -121,17 +121,41 @@
         });
 
         container.addEventListener('mousemove', (event) => {
+            if (isFlipping) return;
             const x = event.clientX - container.getBoundingClientRect().left;
             const rotation = (x / container.offsetWidth) * 180;
             images.style.transform = `rotateY(${rotation}deg)`;
         });
 
         container.addEventListener('touchmove', (event) => {
+            if (isFlipping) return;
             const touch = event.touches[0];
             const x = touch.clientX - container.getBoundingClientRect().left;
             const rotation = (x / container.offsetWidth) * 180;
             images.style.transform = `rotateY(${rotation}deg)`;
         });
+
+        container.addEventListener('click', () => {
+            if (isFlipping) return;
+            isFlipping = true;
+            const currentRotation = getComputedStyle(images).transform;
+            const angle = currentRotation.includes('matrix') ? extractRotation(currentRotation) : 0;
+            const newAngle = angle >= 90 ? 0 : 180;
+            images.style.transition = 'transform 0.5s ease-out';
+            images.style.transform = `rotateY(${newAngle}deg)`;
+            setTimeout(() => {
+                isFlipping = false;
+                images.style.transition = 'transform 0.3s ease-out';
+            }, 500);
+        });
+
+        function extractRotation(matrix) {
+            const values = matrix.split('(')[1].split(')')[0].split(',');
+            const a = values[0];
+            const b = values[1];
+            let angle = Math.round(Math.atan2(b, a) * (180 / Math.PI));
+            return angle < 0 ? angle + 360 : angle;
+        }
     </script>
 
 </body>
