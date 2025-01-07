@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rotating Images</title>
     <style>
+        :root {
+            --scale-factor: 1.1; /* Adjust this value to scale proportionally */
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -20,15 +24,14 @@
         }
 
         .container {
-    width: 300px; /* Adjust the width here */
-    height: 180px; /* Adjust the height here */
-    position: relative;
-    perspective: 1000px;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-top: -235px; /* Move down by 20px (negative value to move up) */
-    margin-left: 10px; /* Move right by 10px (negative value to move left) */
-}
+            width: calc(300px * var(--scale-factor)); /* Scaled width */
+            height: calc(180px * var(--scale-factor)); /* Scaled height */
+            position: relative;
+            perspective: 1000px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: -225px; /* Adjust position vertically */
+        }
 
         .images {
             width: 100%;
@@ -78,29 +81,46 @@
         }
 
         .update-info {
-            margin-top: 20px; /* Adjust position vertically */
-            color: white;
+            margin-top: 65px; /* Adjust position vertically */
+            color: grey;
             font-size: 14px; /* Adjust font size */
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.0);
             text-align: center;
             position: relative;
             font-family: Arial, sans-serif; /* Default font */
         }
 
+        .name-display {
+    position: absolute;
+    top: 95px; /* Move above the rotational images */
+    left: 30px; /* Move slightly to the left */
+    color: black;
+    font-size: 16px; /* Adjust font size */
+    font-weight: 200; /* Adjust text thickness */
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.0);
+    text-align: center;
+    font-family: Arial, sans-serif; /* Adjust font family */
+}
+
         /* Instructions for modifying text styles */
-        /* To adjust font size, modify font-size in .update-info */
-        /* To adjust font color, modify color in .update-info */
-        /* To adjust position, modify margin-top in .update-info */
-        /* To change font family, modify font-family in .update-info */
+        /* To adjust font size, modify font-size in .update-info or .name-display */
+        /* To adjust font color, modify color in .update-info or .name-display */
+        /* To adjust position, modify top, left, margin-top, or margin-bottom */
+        /* To change font family, modify font-family */
     </style>
 </head>
 <body>
 
     <div class="upload-screen">
         <h1>Upload Your Images</h1>
+        <input type="text" id="userName" placeholder="Enter your name" />
         <input type="file" id="frontImage" accept="image/*" />
         <input type="file" id="backImage" accept="image/*" />
         <button id="submitBtn">Submit</button>
+    </div>
+
+    <div class="name-display" id="name-display" style="display: none;">
+        <!-- Placeholder for user name -->
     </div>
 
     <div class="container" id="image-container" style="display: none;">
@@ -115,73 +135,95 @@
     </div>
 
     <script>
-        const frontImageInput = document.getElementById('frontImage');
-        const backImageInput = document.getElementById('backImage');
-        const submitBtn = document.getElementById('submitBtn');
-        const container = document.getElementById('image-container');
-        const images = document.getElementById('images');
-        const frontImage = document.getElementById('front');
-        const backImage = document.getElementById('back');
-        const updateInfo = document.getElementById('update-info');
-        const updateTime = document.getElementById('update-time');
-        const body = document.body;
+    const frontImageInput = document.getElementById('frontImage');
+    const backImageInput = document.getElementById('backImage');
+    const submitBtn = document.getElementById('submitBtn');
+    const container = document.getElementById('image-container');
+    const images = document.getElementById('images');
+    const frontImage = document.getElementById('front');
+    const backImage = document.getElementById('back');
+    const updateInfo = document.getElementById('update-info');
+    const updateTime = document.getElementById('update-time');
+    const body = document.body;
+    const nameDisplay = document.getElementById('name-display');
+    const userNameInput = document.getElementById('userName');
 
-        let isFlipping = false;
-        let currentAngle = 0;
+    let isDragging = false;
+    let startX = 0;
+    let currentAngle = 0;
 
-        submitBtn.addEventListener('click', () => {
-            const frontFile = frontImageInput.files[0];
-            const backFile = backImageInput.files[0];
+    submitBtn.addEventListener('click', () => {
+        const frontFile = frontImageInput.files[0];
+        const backFile = backImageInput.files[0];
 
-            if (!frontFile || !backFile) {
-                alert('Please upload both images.');
-                return;
-            }
+        if (!frontFile || !backFile) {
+            alert('Please upload both images.');
+            return;
+        }
 
-            const frontURL = URL.createObjectURL(frontFile);
-            const backURL = URL.createObjectURL(backFile);
+        const userName = userNameInput.value.trim();
+        if (userName) {
+            nameDisplay.textContent = userName;
+            nameDisplay.style.display = 'block';
+        } else {
+            nameDisplay.style.display = 'none';
+        }
 
-            frontImage.src = frontURL;
-            backImage.src = backURL;
+        const frontURL = URL.createObjectURL(frontFile);
+        const backURL = URL.createObjectURL(backFile);
 
-            container.style.display = 'block';
-            document.querySelector('.upload-screen').style.display = 'none';
-            updateInfo.style.display = 'block';
+        frontImage.src = frontURL;
+        backImage.src = backURL;
 
-            // Request fullscreen after clicking submit
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch((err) => {
-                    console.error(`Error attempting to enable fullscreen mode: ${err.message} (${err.name})`);
-                });
-            }
+        container.style.display = 'block';
+        document.querySelector('.upload-screen').style.display = 'none';
+        updateInfo.style.display = 'block';
 
-            // Update the time
-            const now = new Date();
-            const formattedTime = now.toLocaleTimeString('es-ES', {
-                hour: '2-digit',
-                minute: '2-digit'
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch((err) => {
+                console.error(`Error attempting to enable fullscreen mode: ${err.message} (${err.name})`);
             });
-            updateTime.textContent = formattedTime;
+        }
+
+        const now = new Date();
+        const formattedTime = now.toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit'
         });
+        updateTime.textContent = formattedTime;
+    });
 
-        container.addEventListener('click', () => {
-            if (isFlipping) return;
-            isFlipping = true;
+    container.addEventListener('pointerdown', (event) => {
+        isDragging = true;
+        startX = event.clientX || event.touches[0].clientX;
+        images.style.transition = ''; // Disable smooth transition while dragging
+    });
 
-            currentAngle = currentAngle === 0 ? 180 : 0;
-            images.style.transition = 'transform 0.2s ease-out';
-            images.style.transform = `rotateY(${currentAngle}deg)`;
+    container.addEventListener('pointermove', (event) => {
+        if (!isDragging) return;
 
-            // Change background image based on angle
-            body.style.backgroundImage = currentAngle === 0
-                ? "url('https://raw.githubusercontent.com/papaplaygamer10/Moray/refs/heads/main/Screenshot_20250107_031100.jpg')"
-                : "url('https://raw.githubusercontent.com/papaplaygamer10/Moray/refs/heads/main/Screenshot_20250107_031103.jpg')";
+        const currentX = event.clientX || event.touches[0].clientX;
+        const deltaX = currentX - startX;
 
-            setTimeout(() => {
-                isFlipping = false;
-            }, 200);
-        });
-    </script>
+        const newAngle = currentAngle + deltaX / 2; // Adjust sensitivity
+        images.style.transform = `rotateY(${newAngle}deg)`;
+    });
+
+    container.addEventListener('pointerup', () => {
+        if (!isDragging) return;
+        isDragging = false;
+
+        const normalizedAngle = (currentAngle % 360 + 360) % 360; // Normalize angle between 0-360
+        currentAngle = normalizedAngle < 90 || normalizedAngle > 270 ? 0 : 180;
+
+        images.style.transition = 'transform 0.3s ease-out'; // Smooth snap back
+        images.style.transform = `rotateY(${currentAngle}deg)`;
+
+        body.style.backgroundImage = currentAngle === 0
+            ? "url('https://raw.githubusercontent.com/papaplaygamer10/Moray/refs/heads/main/Screenshot_20250107_031100.jpg')"
+            : "url('https://raw.githubusercontent.com/papaplaygamer10/Moray/refs/heads/main/Screenshot_20250107_031103.jpg')";
+    });
+</script>
 
 </body>
 </html>
