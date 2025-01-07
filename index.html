@@ -135,94 +135,83 @@
     </div>
 
     <script>
-    const frontImageInput = document.getElementById('frontImage');
-    const backImageInput = document.getElementById('backImage');
-    const submitBtn = document.getElementById('submitBtn');
-    const container = document.getElementById('image-container');
-    const images = document.getElementById('images');
-    const frontImage = document.getElementById('front');
-    const backImage = document.getElementById('back');
-    const updateInfo = document.getElementById('update-info');
-    const updateTime = document.getElementById('update-time');
-    const body = document.body;
-    const nameDisplay = document.getElementById('name-display');
-    const userNameInput = document.getElementById('userName');
+        const frontImageInput = document.getElementById('frontImage');
+        const backImageInput = document.getElementById('backImage');
+        const submitBtn = document.getElementById('submitBtn');
+        const container = document.getElementById('image-container');
+        const images = document.getElementById('images');
+        const frontImage = document.getElementById('front');
+        const backImage = document.getElementById('back');
+        const updateInfo = document.getElementById('update-info');
+        const updateTime = document.getElementById('update-time');
+        const body = document.body;
+        const nameDisplay = document.getElementById('name-display');
+        const userNameInput = document.getElementById('userName');
 
-    let isSwiping = false;
-    let startX = 0;
-    let currentAngle = 0;
+        let isFlipping = false;
+        let currentAngle = 0;
 
-    submitBtn.addEventListener('click', () => {
-        const frontFile = frontImageInput.files[0];
-        const backFile = backImageInput.files[0];
+        submitBtn.addEventListener('click', () => {
+            const frontFile = frontImageInput.files[0];
+            const backFile = backImageInput.files[0];
 
-        if (!frontFile || !backFile) {
-            alert('Please upload both images.');
-            return;
-        }
+            if (!frontFile || !backFile) {
+                alert('Please upload both images.');
+                return;
+            }
 
-        const userName = userNameInput.value.trim();
-        if (userName) {
-            nameDisplay.textContent = userName;
-            nameDisplay.style.display = 'block';
-        } else {
-            nameDisplay.style.display = 'none';
-        }
+            const userName = userNameInput.value.trim();
+            if (userName) {
+                nameDisplay.textContent = userName;
+                nameDisplay.style.display = 'block';
+            } else {
+                nameDisplay.style.display = 'none';
+            }
 
-        const frontURL = URL.createObjectURL(frontFile);
-        const backURL = URL.createObjectURL(backFile);
+            const frontURL = URL.createObjectURL(frontFile);
+            const backURL = URL.createObjectURL(backFile);
 
-        frontImage.src = frontURL;
-        backImage.src = backURL;
+            frontImage.src = frontURL;
+            backImage.src = backURL;
 
-        container.style.display = 'block';
-        document.querySelector('.upload-screen').style.display = 'none';
-        updateInfo.style.display = 'block';
+            container.style.display = 'block';
+            document.querySelector('.upload-screen').style.display = 'none';
+            updateInfo.style.display = 'block';
 
-        // Request fullscreen after clicking submit
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch((err) => {
-                console.error(`Error attempting to enable fullscreen mode: ${err.message} (${err.name})`);
+            // Request fullscreen after clicking submit
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch((err) => {
+                    console.error(`Error attempting to enable fullscreen mode: ${err.message} (${err.name})`);
+                });
+            }
+
+            // Update the time
+            const now = new Date();
+            const formattedTime = now.toLocaleTimeString('es-ES', {
+                hour: '2-digit',
+                minute: '2-digit'
             });
-        }
-
-        // Update the time
-        const now = new Date();
-        const formattedTime = now.toLocaleTimeString('es-ES', {
-            hour: '2-digit',
-            minute: '2-digit'
+            updateTime.textContent = formattedTime;
         });
-        updateTime.textContent = formattedTime;
-    });
 
-    container.addEventListener('touchstart', (event) => {
-        isSwiping = true;
-        startX = event.touches[0].clientX;
-    });
+        container.addEventListener('click', () => {
+            if (isFlipping) return;
+            isFlipping = true;
 
-    container.addEventListener('touchmove', (event) => {
-        if (!isSwiping) return;
-
-        const currentX = event.touches[0].clientX;
-        const deltaX = currentX - startX;
-
-        if (Math.abs(deltaX) > 50) { // Swipe threshold
-            isSwiping = false;
             currentAngle = currentAngle === 0 ? 180 : 0;
-            images.style.transition = 'transform 0.3s ease-out';
+            images.style.transition = 'transform 0.2s ease-out';
             images.style.transform = `rotateY(${currentAngle}deg)`;
 
             // Change background image based on angle
             body.style.backgroundImage = currentAngle === 0
                 ? "url('https://raw.githubusercontent.com/papaplaygamer10/Moray/refs/heads/main/Screenshot_20250107_031100.jpg')"
                 : "url('https://raw.githubusercontent.com/papaplaygamer10/Moray/refs/heads/main/Screenshot_20250107_031103.jpg')";
-        }
-    });
 
-    container.addEventListener('touchend', () => {
-        isSwiping = false;
-    });
-</script>
+            setTimeout(() => {
+                isFlipping = false;
+            }, 200);
+        });
+    </script>
 
 </body>
 </html>
