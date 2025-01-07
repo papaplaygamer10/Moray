@@ -9,22 +9,26 @@
             margin: 0;
             padding: 0;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-image: url('https://raw.githubusercontent.com/papaplaygamer10/Moray/refs/heads/main/Screenshot_20250107_014210.jpg');
             background-size: cover;
             background-position: center;
+            transition: background-image 0.3s ease-in-out;
+            background-image: url('https://raw.githubusercontent.com/papaplaygamer10/Moray/refs/heads/main/Screenshot_20250107_031100.jpg');
         }
 
         .container {
-            width: 300px; /* Adjust the width here */
-            height: 180px; /* Adjust the height here */
-            position: relative;
-            perspective: 1000px;
-            border-radius: 10px;
-            overflow: hidden;
-        }
+    width: 300px; /* Adjust the width here */
+    height: 180px; /* Adjust the height here */
+    position: relative;
+    perspective: 1000px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: -235px; /* Move down by 20px (negative value to move up) */
+    margin-left: 10px; /* Move right by 10px (negative value to move left) */
+}
 
         .images {
             width: 100%;
@@ -72,6 +76,22 @@
             border: none;
             font-size: 16px;
         }
+
+        .update-info {
+            margin-top: 20px; /* Adjust position vertically */
+            color: white;
+            font-size: 14px; /* Adjust font size */
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+            text-align: center;
+            position: relative;
+            font-family: Arial, sans-serif; /* Default font */
+        }
+
+        /* Instructions for modifying text styles */
+        /* To adjust font size, modify font-size in .update-info */
+        /* To adjust font color, modify color in .update-info */
+        /* To adjust position, modify margin-top in .update-info */
+        /* To change font family, modify font-family in .update-info */
     </style>
 </head>
 <body>
@@ -90,6 +110,10 @@
         </div>
     </div>
 
+    <div class="update-info" id="update-info" style="display: none;">
+        Última actualización: 19/09/2024 <span id="update-time"></span>
+    </div>
+
     <script>
         const frontImageInput = document.getElementById('frontImage');
         const backImageInput = document.getElementById('backImage');
@@ -98,6 +122,9 @@
         const images = document.getElementById('images');
         const frontImage = document.getElementById('front');
         const backImage = document.getElementById('back');
+        const updateInfo = document.getElementById('update-info');
+        const updateTime = document.getElementById('update-time');
+        const body = document.body;
 
         let isFlipping = false;
         let currentAngle = 0;
@@ -119,12 +146,22 @@
 
             container.style.display = 'block';
             document.querySelector('.upload-screen').style.display = 'none';
-        });
+            updateInfo.style.display = 'block';
 
-        container.addEventListener('touchstart', (event) => {
+            // Request fullscreen after clicking submit
             if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
+                document.documentElement.requestFullscreen().catch((err) => {
+                    console.error(`Error attempting to enable fullscreen mode: ${err.message} (${err.name})`);
+                });
             }
+
+            // Update the time
+            const now = new Date();
+            const formattedTime = now.toLocaleTimeString('es-ES', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            updateTime.textContent = formattedTime;
         });
 
         container.addEventListener('click', () => {
@@ -135,14 +172,15 @@
             images.style.transition = 'transform 0.2s ease-out';
             images.style.transform = `rotateY(${currentAngle}deg)`;
 
+            // Change background image based on angle
+            body.style.backgroundImage = currentAngle === 0
+                ? "url('https://raw.githubusercontent.com/papaplaygamer10/Moray/refs/heads/main/Screenshot_20250107_031100.jpg')"
+                : "url('https://raw.githubusercontent.com/papaplaygamer10/Moray/refs/heads/main/Screenshot_20250107_031103.jpg')";
+
             setTimeout(() => {
                 isFlipping = false;
             }, 200);
         });
-
-        // Instructions for position adjustment:
-        // Modify the "width" and "height" properties of the .container class in the CSS above
-        // to adjust the size of the rotational picture "window."
     </script>
 
 </body>
