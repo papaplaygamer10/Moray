@@ -92,7 +92,7 @@
 
         .name-display {
     position: absolute;
-    top: 95px; /* Move above the rotational images */
+    top: 96px; /* Move above the rotational images */
     left: 30px; /* Move slightly to the left */
     color: black;
     font-size: 16px; /* Adjust font size */
@@ -148,7 +148,7 @@
     const nameDisplay = document.getElementById('name-display');
     const userNameInput = document.getElementById('userName');
 
-    let isDragging = false;
+    let isSwiping = false;
     let startX = 0;
     let currentAngle = 0;
 
@@ -179,12 +179,14 @@
         document.querySelector('.upload-screen').style.display = 'none';
         updateInfo.style.display = 'block';
 
+        // Request fullscreen after clicking submit
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch((err) => {
                 console.error(`Error attempting to enable fullscreen mode: ${err.message} (${err.name})`);
             });
         }
 
+        // Update the time
         const now = new Date();
         const formattedTime = now.toLocaleTimeString('es-ES', {
             hour: '2-digit',
@@ -193,35 +195,32 @@
         updateTime.textContent = formattedTime;
     });
 
-    container.addEventListener('pointerdown', (event) => {
-        isDragging = true;
-        startX = event.clientX || event.touches[0].clientX;
-        images.style.transition = ''; // Disable smooth transition while dragging
+    container.addEventListener('touchstart', (event) => {
+        isSwiping = true;
+        startX = event.touches[0].clientX;
     });
 
-    container.addEventListener('pointermove', (event) => {
-        if (!isDragging) return;
+    container.addEventListener('touchmove', (event) => {
+        if (!isSwiping) return;
 
-        const currentX = event.clientX || event.touches[0].clientX;
+        const currentX = event.touches[0].clientX;
         const deltaX = currentX - startX;
 
-        const newAngle = currentAngle + deltaX / 2; // Adjust sensitivity
-        images.style.transform = `rotateY(${newAngle}deg)`;
+        if (Math.abs(deltaX) > 50) { // Swipe threshold
+            isSwiping = false;
+            currentAngle = currentAngle === 0 ? 180 : 0;
+            images.style.transition = 'transform 0.3s ease-out';
+            images.style.transform = `rotateY(${currentAngle}deg)`;
+
+            // Change background image based on angle
+            body.style.backgroundImage = currentAngle === 0
+                ? "url('https://raw.githubusercontent.com/papaplaygamer10/Moray/refs/heads/main/Screenshot_20250107_031100.jpg')"
+                : "url('https://raw.githubusercontent.com/papaplaygamer10/Moray/refs/heads/main/Screenshot_20250107_031103.jpg')";
+        }
     });
 
-    container.addEventListener('pointerup', () => {
-        if (!isDragging) return;
-        isDragging = false;
-
-        const normalizedAngle = (currentAngle % 360 + 360) % 360; // Normalize angle between 0-360
-        currentAngle = normalizedAngle < 90 || normalizedAngle > 270 ? 0 : 180;
-
-        images.style.transition = 'transform 0.3s ease-out'; // Smooth snap back
-        images.style.transform = `rotateY(${currentAngle}deg)`;
-
-        body.style.backgroundImage = currentAngle === 0
-            ? "url('https://raw.githubusercontent.com/papaplaygamer10/Moray/refs/heads/main/Screenshot_20250107_031100.jpg')"
-            : "url('https://raw.githubusercontent.com/papaplaygamer10/Moray/refs/heads/main/Screenshot_20250107_031103.jpg')";
+    container.addEventListener('touchend', () => {
+        isSwiping = false;
     });
 </script>
 
