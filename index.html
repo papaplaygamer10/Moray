@@ -3,97 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Rotation App</title>
+    <title>Image Rotation</title>
     <style>
-        body, html {
+        body {
             margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f4f4f4;
-            overflow: hidden;
-        }
-
-        .home, .container {
-            width: 100%;
-            height: 100%;
+            font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: #ffffff;
-            box-sizing: border-box;
-        }
-
-        .home button, .home input {
-            margin: 10px 0;
-            padding: 10px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .home button {
-            background-color: #007bff;
-            color: #fff;
-        }
-
-        .home input {
-            background-color: #e9ecef;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .background {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: -1;
-            background: url('https://raw.githubusercontent.com/papaplaygamer10/Moray/refs/heads/main/Screenshot_20250107_014210.jpg') no-repeat center center;
-            background-size: cover;
+            height: 100vh;
+            background-color: #f4f4f4;
         }
 
         .container {
-            width: 80%;
-            aspect-ratio: 9 / 16;
-            max-width: 360px;
-            max-height: 640px;
-            position: relative;
-            perspective: 1000px;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .images {
-            width: 60%;
-            height: calc(60% * 3 / 5);
-            position: absolute;
-            transform-style: preserve-3d;
-            transition: transform 0.5s;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotateY(0deg);
-        }
-
-        .images img {
+            display: none;
+            flex-direction: column;
+            align-items: center;
             width: 100%;
             height: 100%;
-            position: absolute;
-            backface-visibility: hidden;
-            border-radius: 10px;
+            overflow: hidden;
         }
 
-        .front {
-            transform: rotateY(0deg);
+        .upload-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .rotation-screen {
+            position: relative;
+            width: 90vw;
+            aspect-ratio: 5 / 3;
+            perspective: 1000px;
+        }
+
+        .image-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.2s;
+        }
+
+        .image-container img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            object-fit: cover;
         }
 
         .back {
@@ -102,87 +62,97 @@
     </style>
 </head>
 <body>
-
-    <div class="background"></div>
-
-    <div class="home" id="home-page">
-        <button id="fullscreen-btn">Go Fullscreen</button>
-        <input type="file" accept="image/*" id="front-image" placeholder="Upload Front Image">
-        <input type="file" accept="image/*" id="back-image" placeholder="Upload Back Image">
-        <button id="submit-btn" disabled>Submit</button>
+    <!-- Upload Screen -->
+    <div class="upload-screen">
+        <h1>Upload Your Images</h1>
+        <input type="file" id="frontImage" accept="image/*" />
+        <input type="file" id="backImage" accept="image/*" />
+        <button id="submitBtn">Submit</button>
     </div>
 
-    <div class="container hidden" id="rotate-page">
-        <div class="images" id="images">
-            <img src="" alt="Front" class="front" id="front-img">
-            <img src="" alt="Back" class="back" id="back-img">
+    <!-- Rotation Screen -->
+    <div class="container rotation-screen" id="rotationScreen">
+        <div class="image-container" id="imageContainer">
+            <img id="front" class="front" />
+            <img id="back" class="back" />
         </div>
     </div>
 
     <script>
-        const fullscreenBtn = document.getElementById('fullscreen-btn');
-        const submitBtn = document.getElementById('submit-btn');
-        const frontImageInput = document.getElementById('front-image');
-        const backImageInput = document.getElementById('back-image');
-        const homePage = document.getElementById('home-page');
-        const rotatePage = document.getElementById('rotate-page');
-        const frontImg = document.getElementById('front-img');
-        const backImg = document.getElementById('back-img');
-        const images = document.getElementById('images');
+        const frontImageInput = document.getElementById('frontImage');
+        const backImageInput = document.getElementById('backImage');
+        const submitBtn = document.getElementById('submitBtn');
+        const rotationScreen = document.getElementById('rotationScreen');
+        const imageContainer = document.getElementById('imageContainer');
+        const frontImage = document.getElementById('front');
+        const backImage = document.getElementById('back');
 
-        let frontImage = null;
-        let backImage = null;
-
-        // Fullscreen functionality
-        fullscreenBtn.addEventListener('click', () => {
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen();
-            }
-        });
-
-        // Enable submit button only when both images are uploaded
-        frontImageInput.addEventListener('change', (event) => {
-            frontImage = event.target.files[0];
-            checkImages();
-        });
-
-        backImageInput.addEventListener('change', (event) => {
-            backImage = event.target.files[0];
-            checkImages();
-        });
-
-        function checkImages() {
-            if (frontImage && backImage) {
-                submitBtn.disabled = false;
-            }
-        }
-
-        // Handle submit button click
+        // Show the rotation screen after submitting images
         submitBtn.addEventListener('click', () => {
-            if (frontImage && backImage) {
-                const frontImageURL = URL.createObjectURL(frontImage);
-                const backImageURL = URL.createObjectURL(backImage);
-                frontImg.src = frontImageURL;
-                backImg.src = backImageURL;
-                homePage.classList.add('hidden');
-                rotatePage.classList.remove('hidden');
+            const frontFile = frontImageInput.files[0];
+            const backFile = backImageInput.files[0];
+
+            if (!frontFile || !backFile) {
+                alert('Please upload both images.');
+                return;
             }
+
+            const frontURL = URL.createObjectURL(frontFile);
+            const backURL = URL.createObjectURL(backFile);
+
+            frontImage.src = frontURL;
+            backImage.src = backURL;
+
+            document.querySelector('.upload-screen').style.display = 'none';
+            rotationScreen.style.display = 'flex';
         });
 
-        // Image rotation functionality
-        rotatePage.addEventListener('mousemove', (event) => {
-            const x = event.clientX - rotatePage.getBoundingClientRect().left;
-            const rotation = (x / rotatePage.offsetWidth) * 180;
-            images.style.transform = `rotateY(${rotation}deg)`;
+        // Add rotation functionality
+        let isDragging = false;
+        let startX = 0;
+        let currentRotation = 0;
+
+        rotationScreen.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX;
         });
 
-        rotatePage.addEventListener('touchmove', (event) => {
-            const touch = event.touches[0];
-            const x = touch.clientX - rotatePage.getBoundingClientRect().left;
-            const rotation = (x / rotatePage.offsetWidth) * 180;
-            images.style.transform = `rotateY(${rotation}deg)`;
+        rotationScreen.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+
+            const deltaX = e.clientX - startX;
+            startX = e.clientX;
+
+            currentRotation += deltaX / 5;
+            imageContainer.style.transform = `rotateY(${currentRotation}deg)`;
+        });
+
+        rotationScreen.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        rotationScreen.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
+
+        rotationScreen.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            startX = e.touches[0].clientX;
+        });
+
+        rotationScreen.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+
+            const deltaX = e.touches[0].clientX - startX;
+            startX = e.touches[0].clientX;
+
+            currentRotation += deltaX / 5;
+            imageContainer.style.transform = `rotateY(${currentRotation}deg)`;
+        });
+
+        rotationScreen.addEventListener('touchend', () => {
+            isDragging = false;
         });
     </script>
-
 </body>
 </html>
